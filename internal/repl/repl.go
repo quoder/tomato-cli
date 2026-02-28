@@ -73,6 +73,8 @@ func (r *REPL) handleCommand(line string) {
 		r.handleStats()
 	case "/config":
 		r.handleConfig()
+	case "/clean":
+		r.handleClean()
 	case "/help":
 		r.handleHelp()
 	case "/exit":
@@ -172,9 +174,31 @@ func (r *REPL) handleHelp() {
 	fmt.Println("  /cancel /stop          - Cancel current session")
 	fmt.Println("  /status                - Show current status")
 	fmt.Println("  /stats                 - Show statistics")
+	fmt.Println("  /clean                 - Clear all statistics")
 	fmt.Println("  /config                - Show/edit configuration")
 	fmt.Println("  /help                  - Show this help")
 	fmt.Println("  /exit /quit             - Exit")
+}
+
+func (r *REPL) handleClean() {
+	fmt.Print("Clear all statistics? (y/N): ")
+
+	if !r.scanner.Scan() {
+		fmt.Println("Cancelled")
+		return
+	}
+
+	response := strings.ToLower(strings.TrimSpace(r.scanner.Text()))
+	if response != "y" && response != "yes" {
+		fmt.Println("Cancelled")
+		return
+	}
+
+	if err := r.session.ClearStats(); err != nil {
+		fmt.Printf("Error clearing stats: %v\n", err)
+		return
+	}
+	fmt.Println("Statistics cleared")
 }
 
 func (r *REPL) handleEnd() {

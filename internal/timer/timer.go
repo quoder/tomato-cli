@@ -28,13 +28,14 @@ type command struct {
 }
 
 type Timer struct {
-	cmdChan chan command
-	state   State
+	cmdChan  chan command
+	state    State
+	callback func(State)
 }
 
 func New() *Timer {
 	t := &Timer{
-		cmdChan: make(chan command),
+		cmdChan: make(chan command, 1),
 		state:   State{Phase: PhaseIdle},
 	}
 	go t.run()
@@ -81,7 +82,11 @@ func (t *Timer) tick() {
 
 	t.state.Remaining -= time.Second
 	if t.state.Remaining <= 0 {
+		completedState := t.state
 		t.state = State{Phase: PhaseIdle, Remaining: 0}
+		if t.callback != nil {
+			t.callback(completedState)
+		}
 	}
 }
 
@@ -99,6 +104,10 @@ func (t *Timer) Resume() {
 
 func (t *Timer) Stop() {
 	t.cmdChan <- command{action: "stop"}
+}
+
+func (t *Timer) SetCallback(cb func(State)) {
+	t.callback = cb
 }
 
 func (t *Timer) GetState() State {

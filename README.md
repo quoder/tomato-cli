@@ -78,6 +78,7 @@ Type /help for available commands
 | `/cancel` | `/stop` | Cancel current session |
 | `/status` | - | Show current status |
 | `/stats` | - | Show completed pomodoros |
+| `/clean` | - | Clear all statistics |
 | `/config` | - | Show configuration |
 | `/help` | - | Show help |
 | `/exit` | `/quit` | Exit CLI |

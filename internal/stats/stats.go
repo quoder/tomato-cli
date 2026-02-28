@@ -95,3 +95,8 @@ func (m *Manager) GetTodayCompleted() int {
 	}
 	return count
 }
+
+func (m *Manager) Clear() error {
+	m.stats.Sessions = []Session{}
+	return m.save()
+}

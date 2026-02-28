@@ -21,10 +21,26 @@ type Session struct {
 }
 
 func New(cfg *config.Manager, st *stats.Manager) *Session {
-	return &Session{
+	s := &Session{
 		config: cfg,
 		stats:  st,
 		timer:  timer.New(),
+	}
+	s.timer.SetCallback(s.onPhaseComplete)
+	return s
+}
+
+func (s *Session) onPhaseComplete(completedState timer.State) {
+	activePhase := timer.ActivePhase(completedState.Phase)
+	if completedState.TotalDuration > 0 {
+		s.recordSession(activePhase, completedState.TotalDuration)
+	}
+	if activePhase == timer.PhaseWork {
+		s.startTime = time.Now()
+		s.timer.Start(s.breakDuration, timer.PhaseBreak)
+	} else if activePhase == timer.PhaseBreak {
+		s.startTime = time.Now()
+		s.timer.Start(s.workDuration, timer.PhaseWork)
 	}
 }
 
@@ -138,15 +154,16 @@ func (s *Session) recordSession(phase timer.Phase, duration time.Duration) {
 	s.stats.AddSession(session)
 }
 
-func (s *Session) SetCallback(cb func(timer.State)) {
-}
-
 func (s *Session) GetTotalCompleted() int {
 	return s.stats.GetTotalCompleted()
 }
 
 func (s *Session) GetTodayCompleted() int {
 	return s.stats.GetTodayCompleted()
+}
+
+func (s *Session) ClearStats() error {
+	return s.stats.Clear()
 }
 
 func (s *Session) GetConfig() config.Config {
